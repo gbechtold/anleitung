@@ -37,6 +37,7 @@ async function pcmNachWav(pcm, ziel) {
 
 export async function probenLaufen({ wurzel = process.cwd(), argumente = [] } = {}) {
   const motor = argumente.includes('--voicestudio') ? 'voicestudio' : 'piper'
+  // VoiceStudio braucht die Profil-IDs, Piper die Namen aus PIPER_STIMMEN.
   const nurDiese = argumente.find((a) => a.startsWith('--stimmen='))?.split('=')[1]?.split(',')
   const stimmen = nurDiese ?? (motor === 'voicestudio' ? [] : Object.keys(PIPER_STIMMEN))
   if (!stimmen.length) throw new Error('Keine Stimmen genannt. Mit --stimmen=a,b,c aufrufen.')

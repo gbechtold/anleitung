@@ -9,6 +9,7 @@
  *   anleitung bauen <slug>         video, then documentation page
  *   anleitung doku <slug>          documentation page only
  *   anleitung proben               voice samples to compare
+ *   anleitung entwerfen <name> "<english attributes>"   design a VoiceStudio voice
  */
 import { spawn } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -137,7 +138,19 @@ async function proben() {
   await probenLaufen({ wurzel, argumente: rest })
 }
 
-const befehle = { init, neu, stimme, bauen, doku, proben }
+async function entwerfen() {
+  const [name, beschreibung] = rest
+  if (!name || !beschreibung) {
+    abbrechen('Aufruf: anleitung entwerfen <name> "<englische Merkmale>"\n' +
+      'VoiceStudio liest nur englische Merkmalswoerter: female, young adult, moderate pitch.')
+  }
+  const { profilEntwerfen } = await import('./voicestudio.mjs')
+  const { profil, instruct, ungelesen } = await profilEntwerfen({ name, beschreibung })
+  sagen(`Profil ${profil.id ?? profil.profile_id ?? '?'} angelegt: ${instruct}`)
+  if (ungelesen?.length) sagen(`Nicht gelesen: ${ungelesen.join(', ')}`)
+}
+
+const befehle = { init, neu, stimme, bauen, doku, proben, entwerfen }
 
 if (!befehl || befehl === 'hilfe' || !befehle[befehl]) {
   sagen(readFileSync(join(paket, 'src', 'cli.mjs'), 'utf8').split('\n').slice(2, 12).join('\n').replace(/^ \* ?/gm, ''))

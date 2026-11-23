@@ -63,21 +63,11 @@ export async function piperSprechen(text, stimme, tempo = 1) {
   }
 }
 
-export async function voicestudioSprechen(text, stimme) {
-  const antwort = await fetch(`${VS}/api/tts`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ text, profile_id: stimme, format: 'wav' }),
-  })
-  if (!antwort.ok) throw new Error(`VoiceStudio ${antwort.status}: ${(await antwort.text()).slice(0, 200)}`)
-  const dir = await mkdtemp(join(tmpdir(), 'vs-'))
-  const wav = join(dir, 'clip.wav')
-  try {
-    await writeFile(wav, Buffer.from(await antwort.arrayBuffer()))
-    return await nachPcm(wav)
-  } finally {
-    await rm(dir, { recursive: true, force: true })
-  }
+export async function voicestudioSprechen(text, stimme, tempo = 1) {
+  // VoiceStudio spricht selbst OpenAI-Art und liefert auf Wunsch rohes PCM mit
+  // 24 kHz: dieselbe Form, die argo liest. Es bleibt nichts umzurechnen.
+  const { sprechen } = await import('./voicestudio.mjs')
+  return sprechen({ text, stimme: stimme ?? 'default', tempo })
 }
 
 export function stimmeDienst({ port = 3901, motor = 'piper' } = {}) {
