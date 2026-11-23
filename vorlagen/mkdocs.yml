@@ -1,0 +1,37 @@
+# Lesbare Fassung der Anleitungen.
+#   mkdocs serve   zum Ansehen
+#   mkdocs build   schreibt nach doku-site/
+site_name: Anleitungen
+site_description: Videos und Schritt-für-Schritt-Anleitungen
+docs_dir: doku
+site_dir: doku-site
+use_directory_urls: false
+
+theme:
+  name: material
+  language: de
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle: { icon: material/weather-night, name: Dunkel }
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle: { icon: material/weather-sunny, name: Hell }
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+
+nav:
+  - Übersicht: index.md

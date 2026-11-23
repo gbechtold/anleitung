@@ -1,0 +1,31 @@
+{
+  "name": "@starsmedia/anleitung",
+  "version": "0.1.0",
+  "description": "Narrated walkthrough videos and documentation pages from one source per feature: Playwright drives the app, argo records, Piper or VoiceStudio speaks, ffmpeg cuts.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "anleitung": "src/cli.mjs"
+  },
+  "main": "src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./karte": "./src/karte.mjs",
+    "./doku": "./src/doku.mjs",
+    "./stimme": "./src/stimme.mjs"
+  },
+  "files": [
+    "src",
+    "vorlagen",
+    "assets",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "peerDependencies": {
+    "@argo-video/cli": ">=0.42",
+    "@playwright/test": ">=1.57",
+    "openai": ">=4"
+  }
+}
