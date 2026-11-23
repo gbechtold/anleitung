@@ -15,7 +15,9 @@ export default {
   // Zielgruppen in der Reihenfolge, in der sie meist vorkommen.
   zielgruppen: ['Gäste', 'Team'],
 
-  // Stimme: 'piper' spricht offline vom eigenen Rechner,
-  // 'voicestudio' spricht ueber die laufende VoiceStudio-Anwendung.
+  // Stimme. 'piper' spricht offline vom eigenen Rechner und braucht die
+  // Bruecke aus "anleitung stimme" auf Port 3901. 'voicestudio' spricht
+  // direkt mit der laufenden Anwendung auf Port 3900, ohne Bruecke; 'name'
+  // ist dort der Profilname oder die Profil-ID.
   stimme: { motor: 'piper', name: 'thorsten-high', port: 3901 },
 }

@@ -7,11 +7,15 @@ export default defineConfig({
   outputDir: 'videos',
 
   tts: {
-    // Der Dienst aus "anleitung stimme". argo spricht OpenAI-Art, dahinter
-    // steht Piper oder VoiceStudio.
+    // VoiceStudio spricht selbst OpenAI-Art, auf Port 3900, mit
+    // response_format pcm bei 24 kHz. Genau das erwartet argo, also geht der
+    // Weg direkt. Piper braucht die Bruecke aus "anleitung stimme".
     engine: engines.openai({
-      baseUrl: `http://127.0.0.1:${konfig.stimme?.port ?? 3901}/v1`,
-      model: konfig.stimme?.motor ?? 'piper',
+      baseUrl:
+        konfig.stimme?.motor === 'voicestudio'
+          ? (konfig.stimme?.url ?? 'http://127.0.0.1:3900') + '/v1'
+          : `http://127.0.0.1:${konfig.stimme?.port ?? 3901}/v1`,
+      model: konfig.stimme?.modell ?? (konfig.stimme?.motor === 'voicestudio' ? 'omnivoice' : 'piper'),
       apiKey: 'lokal',
       timeoutMs: 600_000,
     }),
