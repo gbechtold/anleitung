@@ -79,6 +79,10 @@ anleitung proben --stimmen=kerstin-medium,ramona   # compare voices
 
 ## Known rough edges
 
+- A `"voice"` on a single scene wins over the project default and is easy to
+  forget. Two scenes kept an old voice through a switch and the video changed
+  speaker mid-way. Only set it per scene when a second speaker is the point.
+
 - argo 0.42 writes subtitle end times with fractional milliseconds
   (`00:00:09,137.0833…`), which no player accepts. `anleitung doku` repairs
   them on the way into `doku/videos/`.
