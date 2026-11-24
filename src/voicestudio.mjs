@@ -63,8 +63,16 @@ export async function profilEntwerfen({ name, beschreibung, sprache = 'de', seed
   return { profil, instruct: gelesen.instruct, ungelesen: offen }
 }
 
-/** Rohes PCM, 24 kHz, 16 bit, mono: die Form, die argo liest. */
-export async function sprechen({ text, stimme, modell = 'omnivoice', sprache = 'de', tempo = 1 }) {
+/**
+ * Rohes PCM, 24 kHz, 16 bit, mono: die Form, die argo liest.
+ *
+ * `seed` haelt die Stimme ueber viele Haeppchen hinweg gleich. Ohne ihn
+ * wuerfelt das Modell je Aufruf neu, und dann wandert die Klangfarbe im
+ * fertigen Video von Satz zu Satz. `fuehrung` (classifier-free guidance,
+ * Standard 2,0) regelt, wie streng es der entworfenen Stimme folgt: hoeher
+ * ist ruhiger und gleichmaessiger, zu hoch klingt steif.
+ */
+export async function sprechen({ text, stimme, modell = 'omnivoice', sprache = 'de', tempo = 1, seed, fuehrung, haltung }) {
   const antwort = await holen('/v1/audio/speech', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -75,6 +83,9 @@ export async function sprechen({ text, stimme, modell = 'omnivoice', sprache = '
       language: sprache,
       speed: tempo,
       response_format: 'pcm',
+      ...(seed != null ? { seed } : {}),
+      ...(fuehrung != null ? { guidance_scale: fuehrung } : {}),
+      ...(haltung ? { instruct: haltung } : {}),
     }),
   })
   return Buffer.from(await antwort.arrayBuffer())

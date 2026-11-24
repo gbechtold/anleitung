@@ -114,7 +114,17 @@ async function stimme() {
   const konfig = existsSync(join(wurzel, 'anleitung.config.mjs')) ? await konfigLesen() : {}
   const motor = rest[0] ?? konfig.stimme?.motor ?? 'piper'
   const { stimmeDienst } = await import('./stimme.mjs')
-  stimmeDienst({ motor, port: konfig.stimme?.port ?? 3901 })
+  stimmeDienst({
+    motor,
+    port: konfig.stimme?.port ?? 3901,
+    einstellungen: {
+      modell: konfig.stimme?.modell,
+      sprache: konfig.stimme?.sprache ?? 'de',
+      seed: konfig.stimme?.seed,
+      fuehrung: konfig.stimme?.fuehrung,
+      haltung: konfig.stimme?.haltung,
+    },
+  })
 }
 
 async function bauen() {

@@ -63,15 +63,18 @@ export async function piperSprechen(text, stimme, tempo = 1) {
   }
 }
 
-export async function voicestudioSprechen(text, stimme, tempo = 1) {
+export async function voicestudioSprechen(text, stimme, tempo = 1, zusatz = {}) {
   // VoiceStudio spricht selbst OpenAI-Art und liefert auf Wunsch rohes PCM mit
   // 24 kHz: dieselbe Form, die argo liest. Es bleibt nichts umzurechnen.
   const { sprechen } = await import('./voicestudio.mjs')
-  return sprechen({ text, stimme: stimme ?? 'default', tempo })
+  return sprechen({ text, stimme: stimme ?? 'default', tempo, ...zusatz })
 }
 
-export function stimmeDienst({ port = 3901, motor = 'piper' } = {}) {
-  const sprechen = motor === 'voicestudio' ? voicestudioSprechen : piperSprechen
+export function stimmeDienst({ port = 3901, motor = 'piper', einstellungen = {} } = {}) {
+  const sprechen =
+    motor === 'voicestudio'
+      ? (text, stimme, tempo) => voicestudioSprechen(text, stimme, tempo, einstellungen)
+      : piperSprechen
 
   const server = createServer((req, res) => {
     if (req.method !== 'POST' || !req.url.endsWith('/audio/speech')) {
@@ -100,7 +103,11 @@ export function stimmeDienst({ port = 3901, motor = 'piper' } = {}) {
   })
 
   server.listen(port, '127.0.0.1', () => {
-    console.log(`Stimme auf http://127.0.0.1:${port}/v1  (${motor})`)
+    const zusatz = Object.entries(einstellungen)
+      .filter(([, v]) => v != null)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(' ')
+    console.log(`Stimme auf http://127.0.0.1:${port}/v1  (${motor}${zusatz ? `, ${zusatz}` : ''})`)
   })
   return server
 }
