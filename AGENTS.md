@@ -32,8 +32,11 @@ w3 tickets prototype, which is the first caller.
 
 ## Current tasks
 
-- [ ] Publish to GitHub (decision by Guntram: account, public or private)
-- [ ] Voice decision for w3 tickets after the samples in `stimmproben/`
+- [x] Published 23.11.2026: https://github.com/gbechtold/anleitung, public, MIT
+- [x] Voice decided 23.11.2026: `de_DE-kerstin-medium`, German, female, 22.05 kHz,
+      dataset CC0. VoiceStudio stays installed for designing and cloning, but its
+      default weights (OmniVoice, CC-BY-NC) cannot carry a product video, and the
+      licence acceptance is a person's decision, so it was not clicked.
 - [ ] `anleitung pruefen`: a feature without a drehbuch, a drehbuch that no
       longer runs, a page without a video
 - [ ] A second caller besides w3 tickets, to find what is still hard-wired
