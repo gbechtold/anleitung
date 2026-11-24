@@ -7,7 +7,7 @@
  * sentence can fall apart on numbers, dates and compound words, so the
  * sentences carry all three.
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { execFile } from 'node:child_process'
@@ -37,6 +37,7 @@ async function pcmNachWav(pcm, ziel) {
 
 export async function probenLaufen({ wurzel = process.cwd(), argumente = [] } = {}) {
   const motor = argumente.includes('--voicestudio') ? 'voicestudio' : 'piper'
+  const modell = argumente.find((a) => a.startsWith('--modell='))?.split('=')[1]
   // VoiceStudio braucht die Profil-IDs, Piper die Namen aus PIPER_STIMMEN.
   const nurDiese = argumente.find((a) => a.startsWith('--stimmen='))?.split('=')[1]?.split(',')
   const stimmen = nurDiese ?? (motor === 'voicestudio' ? [] : Object.keys(PIPER_STIMMEN))
@@ -44,13 +45,18 @@ export async function probenLaufen({ wurzel = process.cwd(), argumente = [] } = 
 
   const ziel = join(wurzel, 'stimmproben')
   mkdirSync(ziel, { recursive: true })
-  const sprechen = motor === 'voicestudio' ? voicestudioSprechen : piperSprechen
+  const sprechen = motor === 'voicestudio'
+    ? async (text, stimme, tempo) => {
+        const { sprechen: vs } = await import('./voicestudio.mjs')
+        return vs({ text, stimme, tempo, modell: modell ?? 'omnivoice' })
+      }
+    : piperSprechen
 
   const ergebnisse = []
   for (const stimme of stimmen) {
     const dateien = []
     for (const [i, satz] of PROBESAETZE.entries()) {
-      const name = `${motor}-${stimme}-${i + 1}.wav`
+      const name = `${modell ?? motor}-${stimme}-${i + 1}.wav`
       try {
         const t0 = Date.now()
         const pcm = await sprechen(satz, stimme, 1)
@@ -66,9 +72,46 @@ export async function probenLaufen({ wurzel = process.cwd(), argumente = [] } = 
   }
 
   const seite = join(ziel, 'index.html')
-  writeFileSync(seite, probenSeite(ergebnisse))
+  writeFileSync(seite, probenSeite(await alleProben(ziel)))
   process.stdout.write(`\nZum Anhören: ${seite}\n`)
   return { ziel, ergebnisse }
+}
+
+/**
+ * Alles, was im Ordner liegt, nicht nur der letzte Lauf. Sonst verschwindet
+ * die Stimme von gestern, sobald heute eine neue dazukommt, und vergleichen
+ * laesst sich nur noch gegen die Erinnerung.
+ */
+async function alleProben(ziel) {
+  const MOTOREN = ['mlx-audio', 'voicestudio', 'omnivoice', 'cosyvoice', 'voxcpm2', 'piper']
+  const namen = await profilNamen()
+  const dateien = readdirSync(ziel).filter((f) => f.endsWith('.wav')).sort()
+  const gruppen = new Map()
+  for (const datei of dateien) {
+    const treffer = /^(.*)-(\d+)\.wav$/.exec(datei)
+    if (!treffer) continue
+    const [, schluessel, nummer] = treffer
+    if (!gruppen.has(schluessel)) gruppen.set(schluessel, [])
+    gruppen.get(schluessel).push({ name: datei, satz: PROBESAETZE[Number(nummer) - 1] ?? '' })
+  }
+  return [...gruppen].map(([schluessel, dateien]) => {
+    // Der Motorname kann selbst einen Bindestrich tragen, deshalb der laengste
+    // passende Anfang und nicht einfach bis zum ersten Strich.
+    const motor = MOTOREN.find((m) => schluessel.startsWith(`${m}-`)) ?? schluessel.split('-')[0]
+    const kennung = schluessel.slice(motor.length + 1) || schluessel
+    return { stimme: namen.get(kennung) ?? kennung, motor, dateien }
+  })
+}
+
+/** Lesbare Namen der VoiceStudio-Profile, wenn die Anwendung laeuft. */
+async function profilNamen() {
+  try {
+    const { profile } = await import('./voicestudio.mjs')
+    const liste = await profile()
+    return new Map(liste.map((p) => [p.id ?? p.profile_id, p.name]))
+  } catch {
+    return new Map()
+  }
 }
 
 function probenSeite(ergebnisse) {
@@ -81,7 +124,7 @@ function probenSeite(ergebnisse) {
     .map((d) =>
       d.fehler
         ? `<p class="fehler">${d.satz}<br><strong>Fehlgeschlagen:</strong> ${d.fehler}</p>`
-        : `<p class="satz">${d.satz}</p><audio controls preload="none" src="${d.name}"></audio><p class="zahl">${d.sekunden} s gesprochen, ${d.ms} ms erzeugt</p>`,
+        : `<p class="satz">${d.satz}</p><audio controls preload="none" src="${d.name}"></audio>`,
     )
     .join('')}
 </section>`,

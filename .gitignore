@@ -2,3 +2,7 @@ node_modules/
 stimmproben/
 *.wav
 .DS_Store
+
+# Demo-Seite: erzeugte Medien, gehoeren nicht ins Repo
+demo-seite/
+stimmproben-web/
