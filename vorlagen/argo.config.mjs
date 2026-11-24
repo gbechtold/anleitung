@@ -19,7 +19,7 @@ export default defineConfig({
       apiKey: 'lokal',
       timeoutMs: 600_000,
     }),
-    defaultVoice: konfig.stimme?.name ?? 'thorsten-high',
+    defaultVoice: konfig.stimme?.name ?? 'kerstin-medium',
     defaultSpeed: 1.0,
   },
 

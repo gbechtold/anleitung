@@ -87,9 +87,25 @@ anleitung proben --stimmen=kerstin-medium,ramona   # compare voices
 - A run takes real state out of the app under test (a cart, a hold, a draft).
   Give it back at the end of the drehbuch, or a night of retries drains it.
 
+## The voice and its licence
+
+Measured 23.11.2026, because the licence decides this and the product pages do
+not say it plainly:
+
+| Voice | Where | Licence |
+|---|---|---|
+| `de_DE-kerstin-medium` | Piper, 22.05 kHz, female | dataset CC0, clean for commercial work |
+| `de_DE-thorsten-high` | Piper, 22.05 kHz, male | dataset CC0 |
+| `de_DE-ramona-low` | Piper, 16 kHz, female | M-AILABS, terms unverified |
+| OmniVoice (VoiceStudio default) | local, designed or cloned | **CC-BY-NC**, plus a tokenizer with no asserted licence |
+
+The default is Kerstin for that reason. VoiceStudio does more (designing a
+voice from attributes, cloning one from 15 seconds of reference) but its
+default weights cannot carry a product video, and accepting a model licence is
+a decision for a person, not for a script.
+
 ## Licence
 
-MIT for this package. The pieces it drives carry their own: argo MIT, Piper
-MIT with per-voice licences, VoiceStudio AGPL-3.0 with per-model weights.
-**The default VoiceStudio model, OmniVoice, is CC-BY-NC** and does not cover a
-commercial product video. Pick the model deliberately.
+MIT for this package, see LICENSE. The pieces it drives carry their own: argo
+MIT, Piper MIT with per-voice dataset licences, VoiceStudio AGPL-3.0 with
+per-model weights.
