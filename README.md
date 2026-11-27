@@ -79,6 +79,13 @@ anleitung proben --stimmen=kerstin-medium,ramona   # compare voices
 
 ## Known rough edges
 
+- `withOverlay(page, 'scene', ...)` needs an `overlay` entry for that scene in
+  the scenes manifest. Without one it throws mid-scene and the whole recording
+  is lost. Either add the cue or use a plain `waitForTimeout`.
+- A `focusRing` target that is scrolled out of view has no bounding box and
+  kills the run the same way. Scroll it in first, or skip the ring when
+  `boundingBox()` comes back empty.
+
 - A `"voice"` on a single scene wins over the project default and is easy to
   forget. Two scenes kept an old voice through a switch and the video changed
   speaker mid-way. Only set it per scene when a second speaker is the point.
