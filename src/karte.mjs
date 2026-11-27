@@ -106,6 +106,73 @@ ${bewegung ? '' : '.kopf,.label,h1,.strich,li,.fuss{animation:none!important}'}
 </body></html>`
 }
 
+/**
+ * Zwischenkarte vor einem Abschnitt. Sie sagt, wer jetzt handelt und der
+ * wievielte Teil beginnt. Ohne sie laufen Gast und Team im selben Fluss
+ * ineinander, und der Zuschauer merkt den Rollenwechsel nicht.
+ *
+ * @param {object} k
+ * @param {string} k.rolle   wer handelt, z.B. "Gast" oder "Team am Einlass"
+ * @param {string} k.titel   was in diesem Teil passiert
+ * @param {number} k.nummer  der wievielte Teil
+ * @param {number} k.von     wie viele Teile es gibt
+ */
+export function kapitelHtml({ rolle, titel, nummer, von, bewegung = true }) {
+  const logo = logoRoh.replace('<svg ', '<svg class="logo" ')
+  const punkte = Array.from({ length: von }, (_, i) =>
+    `<span class="${i + 1 === nummer ? 'ist' : 'war'}"></span>`).join('')
+
+  return `<!doctype html><html lang="de"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Figtree;src:url(data:font/woff2;base64,${schrift}) format('woff2');font-weight:300 900;font-display:block}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:${MARKE.tinte}; color:#FFFFFF; overflow:hidden;
+  font-family:Figtree, ui-sans-serif, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  display:flex; flex-direction:column; justify-content:space-between;
+  padding:5.2vh 6vw; line-height:1.5;
+}
+.logo{width:clamp(120px,10vw,150px);height:auto;color:#FFFFFF;display:block}
+.mitte{max-width:60ch}
+.teil{
+  font-size:clamp(11px,1.05vw,14px); font-weight:700; letter-spacing:2.4px;
+  text-transform:uppercase; color:${MARKE.akzent}; margin-bottom:2.4vh;
+  animation:${bewegung ? 'auf .5s ease-out .1s both' : 'none'};
+}
+.rolle{
+  font-size:clamp(22px,2.6vw,34px); font-weight:500; color:rgba(255,255,255,.72);
+  margin-bottom:.6vh; animation:${bewegung ? 'auf .5s ease-out .2s both' : 'none'};
+}
+h1{
+  font-size:clamp(32px,4.6vw,66px); font-weight:800; line-height:1.03;
+  letter-spacing:-.02em; text-wrap:balance;
+  animation:${bewegung ? 'auf .55s ease-out .3s both' : 'none'};
+}
+.fortschritt{display:flex; gap:10px; margin-top:4vh; animation:${bewegung ? 'auf .5s ease-out .5s both' : 'none'}}
+.fortschritt span{width:54px; height:4px; background:${MARKE.rahmenDunkel}}
+.fortschritt .ist{background:${MARKE.akzent}}
+.fuss{font-size:clamp(12px,1.1vw,15px); color:rgba(255,255,255,.62)}
+@keyframes auf{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<div>${logo}</div>
+<div class="mitte">
+  <p class="teil">Teil ${nummer} von ${von}</p>
+  <p class="rolle">${entschaerfen(rolle)}</p>
+  <h1>${entschaerfen(titel)}</h1>
+  <div class="fortschritt">${punkte}</div>
+</div>
+<div class="fuss">Stars Media IT GmbH</div>
+</body></html>`
+}
+
+/** Zeigt die Kapitelkarte in der laufenden Aufnahme. */
+export async function kapitelZeigen(page, kapitel) {
+  await page.setContent(kapitelHtml(kapitel), { waitUntil: 'load' })
+  await page.evaluate(() => document.fonts.ready)
+}
+
 /** Zeigt die Karte in der laufenden Aufnahme und wartet, bis die Schrift steht. */
 export async function karteZeigen(page, karte) {
   await page.setContent(karteHtml(karte), { waitUntil: 'load' })

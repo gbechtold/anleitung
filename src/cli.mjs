@@ -118,6 +118,7 @@ async function stimme() {
     motor,
     port: konfig.stimme?.port ?? 3901,
     einstellungen: {
+      name: konfig.stimme?.name,
       modell: konfig.stimme?.modell,
       sprache: konfig.stimme?.sprache ?? 'de',
       seed: konfig.stimme?.seed,
@@ -130,8 +131,38 @@ async function stimme() {
 async function bauen() {
   const [slug] = rest
   if (!slug) abbrechen('Aufruf: anleitung bauen <slug>')
+  await stimmePruefen()
   await laufen('npx', ['argo', 'pipeline', slug])
   await doku()
+}
+
+/**
+ * Vor dem Bauen nachsehen, wer auf dem Sprechport antwortet. Ein fremder
+ * Dienst auf demselben Port kostet sonst einen ganzen Lauf mit der falschen
+ * Stimme, und das faellt erst beim Zuhoeren auf.
+ */
+async function stimmePruefen() {
+  const konfig = await konfigLesen()
+  const port = konfig.stimme?.port ?? 3901
+  const direkt = konfig.stimme?.motor === 'voicestudio' && konfig.stimme?.seed == null &&
+    konfig.stimme?.fuehrung == null && konfig.stimme?.haltung == null
+  if (direkt) return
+
+  let ausweis
+  try {
+    ausweis = await (await fetch(`http://127.0.0.1:${port}/v1/stimme`)).json()
+  } catch {
+    abbrechen(`Kein Sprechdienst auf Port ${port}. Erst "anleitung stimme" starten.`)
+  }
+  const erwartet = [konfig.stimme?.motor, konfig.stimme?.name]
+  const gefunden = [ausweis.motor, ausweis.name ?? ausweis.stimme]
+  if (erwartet[0] !== gefunden[0] || String(erwartet[1]) !== String(gefunden[1])) {
+    abbrechen(
+      `Auf Port ${port} spricht ${gefunden.join('/')}, die Konfiguration will ${erwartet.join('/')}.\n` +
+        `Erst beenden:  lsof -t -nP -iTCP:${port} -sTCP:LISTEN | xargs kill`,
+    )
+  }
+  sagen(`Stimme geprüft: ${gefunden.join('/')}`)
 }
 
 async function doku() {

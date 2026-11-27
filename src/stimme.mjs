@@ -76,7 +76,16 @@ export function stimmeDienst({ port = 3901, motor = 'piper', einstellungen = {} 
       ? (text, stimme, tempo) => voicestudioSprechen(text, stimme, tempo, einstellungen)
       : piperSprechen
 
+  const ausweis = { motor, stimme: einstellungen.name ?? null, ...einstellungen }
+
   const server = createServer((req, res) => {
+    // Wer auf diesem Port lauscht, ist nicht zwingend der Dienst, den du
+    // gestartet hast. Dieser Weg macht ihn pruefbar.
+    if (req.method === 'GET' && req.url.endsWith('/stimme')) {
+      res.writeHead(200, { 'content-type': 'application/json' })
+      res.end(JSON.stringify(ausweis))
+      return
+    }
     if (req.method !== 'POST' || !req.url.endsWith('/audio/speech')) {
       res.writeHead(404, { 'content-type': 'application/json' })
       res.end(JSON.stringify({ error: { message: `kein Weg fuer ${req.method} ${req.url}` } }))
@@ -100,6 +109,18 @@ export function stimmeDienst({ port = 3901, motor = 'piper', einstellungen = {} 
         res.end(JSON.stringify({ error: { message: fehler.message } }))
       }
     })
+  })
+
+  server.on('error', (fehler) => {
+    if (fehler.code === 'EADDRINUSE') {
+      console.error(
+        `Port ${port} ist belegt. Dort lauscht ein anderer Sprechdienst, und ein Lauf ` +
+          `wuerde still dessen Stimme nehmen.\n` +
+          `Erst beenden:  lsof -t -nP -iTCP:${port} -sTCP:LISTEN | xargs kill`,
+      )
+      process.exit(1)
+    }
+    throw fehler
   })
 
   server.listen(port, '127.0.0.1', () => {
